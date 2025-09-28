@@ -4,7 +4,7 @@ project:
 
 book:
   title: "CORN3000-EI"
-  author: "Norah Jones"
+  author: "Michael Hunt"
   date: "9/28/2025"
   chapters:
     - index.qmd
@@ -25,4 +25,8 @@ format:
     documentclass: scrreprt
 
 editor: visual
+
+execute:
+  warning: false
+  message: false
 
