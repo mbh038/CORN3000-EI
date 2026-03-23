@@ -1,0 +1,137 @@
+# Gannel ERM 2025-2026 analysis
+
+
+```{r}
+#| include: false
+source(here::here("_common.R"))
+```
+
+
+Analysis of data from file trip to the Gannel 2/3/2026 with ERM group.
+
+## Load packages
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor) # cleans names of columns
+library(readxl)
+library(cowplot)
+```
+
+## Load data
+
+```{r}
+filepath <- here("data","gannel_2526_data.xlsx")
+gannel <- read_excel(filepath,sheet = "Sediment")
+# glimpse(gannel)
+```
+
+## Organic matter per cubic metre of wet sediment
+
+We want to calculate the mass of organic matter per cubic metre of sediment. This is given by $$
+\text{kg OM/m}^3 = \rho_{ws} \times p_{ds} \times p_{om}
+$$ where $\rho_{ws}$ is the density of the wet sediment, $p_{ds}$ is the proportion of dry sediment in the wet sediment and $p_{om}$ is the proportion of organic matter in the dry sediment.
+
+We will calculate eeach of these terms separately
+
+## Calculate proportions of water and dry sediment in the wet sediment
+
+```{r}
+# proportion by mass of wet sediment that is dry sediment
+gannel <- gannel |>
+  mutate (p_ds = (sediment_cooked_inc_boat - boat_empty )/(boat_wet_sediment  - boat_empty ))
+```
+
+```{r}
+# proportion by mass of dry sediment that is organic matter
+gannel <- gannel |>
+  mutate (p_om = 1-  (crucible_ash - crucible_empty )/(crucible_sediment  - crucible_empty ))
+```
+
+## Density of wet sediment
+
+To calculate wet sediment density, we note:
+
+$$
+\begin{align}
+\frac{1}{\rho_{ws}} &= \frac{p_{ds}}{\rho_{ds}} + \frac{p_w}{\rho_w}\\
+&=\frac{p_{ds}\rho_{w} + p_w\rho_{ds}}{\rho_{ds}\rho_w}
+\end{align}
+$$ Hence
+
+$$
+\begin{align}
+\rho_{ws}=\frac{\rho_{ds}\rho_w}{p_{ds}\rho_{w} + p_w\rho_{ds}}
+\end{align}
+$$ But $p_w = 1-p_{ds}$ and $\rho_w=1000$kg/m^3^.
+
+Hence $$
+\begin{align}
+\rho_{ws}=\frac{1000\rho_{ds}}{1000p_{ds} + (1-p_{ds})\rho_{ds}}
+\end{align}
+$$ Check that this formula makes sense: what does it give as the density of the wet density if the proportion of dry sediment is either zero or one?
+
+We see that we need the density of the dry sediment. We measured the quantities need to calculate this for our samples:
+
+```{r}
+# density of dry sediment
+gannel <- gannel |>
+mutate(rho_ds = 1000* soil_mass/water_displacement)
+```
+
+We can now calcuate the density of wet sediment, given the density of dry sediment $\rho_{ds}$ and the proportion $p_{ds}$ of wet sediment that is dry sediment:
+
+```{r}
+gannel <- gannel |>
+  mutate(rho_ws = 1000*rho_ds / (1000*p_ds + (1-p_ds)*rho_ds))
+```
+
+Now that we have all the terms we require, we can calculate the mass of organic matter per cubic metre of wet sediment:
+
+```{r}
+gannel <- gannel |>
+  mutate(mass_om = rho_ws * p_ds * p_om)
+```
+
+The carbon content is about 0.58 times the organic matter content (citation needed), and the mass of carbon per hectare in tonnes is numerically 10 times the mass of carnon per cubic metre in kg. Hence
+
+```{r}
+gannel <- gannel |>
+  mutate(mass_c =0.58 * 10 * mass_om)
+```
+
+We can now find the means of each of the two values measured for each transect
+
+```{r}
+carbon_summary <- gannel|>
+  group_by(transect) |>
+  summarise(mean_c_mass = mean(mass_c))
+```
+
+Now we plot it:
+
+```{r}
+carbon_summary |>
+  filter(transect<8) |>
+  ggplot(aes(x = transect, y = mean_c_mass)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Transect", 
+       y = "Soil carbon tonnes / hectare") +
+  scale_y_continuous(limits = c(0,700)) +
+  theme_cowplot()
+```
+
+A linear regression:
+
+```{r}
+c_model <-lm(mean_c_mass ~ transect, data = carbon_summary)
+summary(c_model)
+```
+
+-   It would be better to use distance to the shore line as the explanatory variable, instead of transect number
+-   Is there evidence from this regression analysis of a change in carbon content from one transect to another?
+-   What is the mean carbon content stored per hectare in the top metre depth of sediment, according to these data?
+-   How does this compare with values in the literature, for salt marshes?
+-   How does it compare with the soils of other habitats such as woodlands?
