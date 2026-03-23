@@ -42,7 +42,7 @@ Therefore, our conceptual life history diagram looks something like this!
 knitr::include_graphics(here("figures","IM16.jpg"))
 ```
 
-You can clone the base grizzly bear model [here](https://insightmaker.com/insight/77056/Yellowstone-Grizzlies). This model has not yet been parameterized!
+You can clone the base grizzly bear model [here](https://insightmaker.com/insight/3cyvDTKAvL24DSvdyQSidb). This model has not yet been parameterized!
 
 #### Step 2: parameterize!
 
