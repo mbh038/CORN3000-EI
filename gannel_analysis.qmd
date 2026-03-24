@@ -1,0 +1,22 @@
+---
+title: "Gannel ANalysis"
+author: "Mike"
+date: "23/03/2026"
+---
+
+## Load packages
+```{r}
+library(tidyverse)
+library(here)
+library(readxl)
+library(janitor)
+library(cowplot)
+```
+## Load data
+```{r}
+filepath <- here("data","gannel_2526_data.xlsx")
+gannel <- read_excel(filepath,sheet = "Sediment")
+# glimpse(gannel)
+```
+
+

@@ -9,8 +9,6 @@ book:
   chapters:
     - index.qmd
     - gannel_ERM_2526.qmd
-    - PVA_grizzly.qmd
-    
     - references.qmd
   license: "CC BY-SA"
   page-footer: CC-BY-SA-4.0 (2025) Michael Hunt
